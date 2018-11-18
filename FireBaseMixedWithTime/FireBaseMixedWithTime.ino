@@ -15,11 +15,14 @@ Adafruit_SSD1306 display(OLED_RESET);
 char buffer[80];
 int timezone = 3;
 int dst = 0;
+String LedStatus , timer;
+const int PIN_LED = 14;
+
 
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
-
+  pinMode(PIN_LED, OUTPUT);
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
   display.display();
@@ -44,15 +47,18 @@ void setup() {
   Serial.println("");
 
   Firebase.begin("real-time-notiy.firebaseio.com");
+  //get value of timer here
+  timer = Firebase.getString("520dd4c0-dddd-11e8-b63e-290de7252586/timer");
+  Serial.println("aaaaaaaaaaaaaaaaaa" + timer);
+  //get value of on/off here
+  LedStatus = Firebase.getString("520dd4c0-dddd-11e8-b63e-290de7252586/status");
+  //  Serial.println("timer is : " + LedStatus);
   Firebase.stream("/520dd4c0-dddd-11e8-b63e-290de7252586");
-  //get value of timer here 
-
-  //get value of on/off here 
-  
 }
 
 
 void loop() {
+
   if (Firebase.failed()) {
     Serial.println("streaming error");
     Serial.println(Firebase.error());
@@ -64,7 +70,27 @@ void loop() {
   timeinfo = localtime (&rawtime);
   strftime (buffer, 80, " %Y-%m-%d %H:%M ", timeinfo);
   Serial.println(buffer);
+  Serial.println("###################################");
+  Serial.println(timer);
+
   // check timer and current time here if same time then turn led on else off
+  if (timer == buffer)
+  {
+    digitalWrite(PIN_LED, HIGH);
+    Serial.println("timer is set");
+    LedStatus = "1";
+  }
+
+  if (LedStatus == "1")
+  {
+    digitalWrite(PIN_LED, HIGH);
+    Serial.println("it is on yaaay");
+  }
+  else if (LedStatus == "1")
+  {
+    digitalWrite(PIN_LED, LOW);
+    Serial.println("it is off oOps");
+  }
 
   if (Firebase.available()) {
     FirebaseObject event = Firebase.readEvent();
@@ -74,12 +100,30 @@ void loop() {
     Serial.print("event: ");
     Serial.println(eventType);
     if (eventType == "put") {
+      Serial.print("path: ");
+      Serial.println(event.getString("path"));
       Serial.print("data: ");
       Serial.println(event.getString("data"));
       String path = event.getString("path");
       String data = event.getString("data");
+      if (path == "/status")
+      {
+        LedStatus = data;
+      }
+      else if (path == "/timer")
+      {
+        timer = data;
+      }
+
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setTextColor(WHITE);
+      display.setCursor(0, 0);
+      display.println(path.c_str() + 1);
+      display.println(data);
+      display.display();
       // check path if timer make variable equal timer else make variable equal ledStatus
-      
+
     }
   }
   delay(1000);
