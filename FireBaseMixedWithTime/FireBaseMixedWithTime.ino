@@ -7,7 +7,9 @@
 
 // Set these to run example.
 #define WIFI_SSID "WE_4215EC"
+//#define WIFI_SSID "Office"
 #define WIFI_PASSWORD "j7q15372"
+//#define WIFI_PASSWORD "Ats102030"
 
 #define OLED_RESET 3
 Adafruit_SSD1306 display(OLED_RESET);
@@ -17,6 +19,7 @@ int timezone = 3;
 int dst = 0;
 String LedStatus , timer;
 const int PIN_LED = 14;
+bool timerflag;
 
 
 void setup() {
@@ -48,12 +51,15 @@ void setup() {
 
   Firebase.begin("real-time-notiy.firebaseio.com");
   //get value of timer here
-  timer = Firebase.getString("520dd4c0-dddd-11e8-b63e-290de7252586/timer");
+  timer = Firebase.getString("AAjT5c028d47dd69e/timer");
+  timerflag = false;
   Serial.println("aaaaaaaaaaaaaaaaaa" + timer);
   //get value of on/off here
-  LedStatus = Firebase.getString("520dd4c0-dddd-11e8-b63e-290de7252586/status");
-  //  Serial.println("timer is : " + LedStatus);
-  Firebase.stream("/520dd4c0-dddd-11e8-b63e-290de7252586");
+  LedStatus = Firebase.getString("AAjT5c028d47dd69e/status");
+  digitalWrite(PIN_LED, LedStatus.toInt());
+String z = String(digitalRead(PIN_LED));
+  Serial.println("vvvvvvvvvvvvvv : " + z);
+  Firebase.stream("/AAjT5c028d47dd69e");
 }
 
 
@@ -68,17 +74,19 @@ void loop() {
   struct tm * timeinfo;
   time (&rawtime);
   timeinfo = localtime (&rawtime);
-  strftime (buffer, 80, " %Y-%m-%d %H:%M ", timeinfo);
+  strftime (buffer, 80, "%Y-%m-%d %H:%M", timeinfo);
   Serial.println(buffer);
   Serial.println("###################################");
   Serial.println(timer);
 
   // check timer and current time here if same time then turn led on else off
-  if (timer == buffer)
+  if (timer == buffer && !timerflag)
   {
-    digitalWrite(PIN_LED, HIGH);
+//    digitalWrite(PIN_LED, HIGH);
     Serial.println("timer is set");
-    LedStatus = "1";
+    LedStatus = String(!digitalRead(PIN_LED));
+    timerflag = true;
+    //    Firebase.setString("520dd4c0-dddd-11e8-b63e-290de7252586/status" , "1");
   }
 
   if (LedStatus == "1")
@@ -86,7 +94,7 @@ void loop() {
     digitalWrite(PIN_LED, HIGH);
     Serial.println("it is on yaaay");
   }
-  else if (LedStatus == "1")
+  else if (LedStatus == "0")
   {
     digitalWrite(PIN_LED, LOW);
     Serial.println("it is off oOps");
@@ -109,10 +117,12 @@ void loop() {
       if (path == "/status")
       {
         LedStatus = data;
+        digitalWrite(PIN_LED, data.toInt());
       }
       else if (path == "/timer")
       {
         timer = data;
+        timerflag = false;
       }
 
       display.clearDisplay();
