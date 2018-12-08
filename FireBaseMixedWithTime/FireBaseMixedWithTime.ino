@@ -20,6 +20,8 @@ int dst = 0;
 String LedStatus , timer;
 const int PIN_LED = 14;
 bool timerflag;
+FirebaseArduino FirebaseSet;
+
 
 
 void setup() {
@@ -50,14 +52,17 @@ void setup() {
   Serial.println("");
 
   Firebase.begin("real-time-notiy.firebaseio.com");
+  FirebaseSet.begin("real-time-notiy.firebaseio.com");
+
   //get value of timer here
   timer = Firebase.getString("AAjT5c028d47dd69e/timer");
+
   timerflag = false;
   Serial.println("aaaaaaaaaaaaaaaaaa" + timer);
   //get value of on/off here
   LedStatus = Firebase.getString("AAjT5c028d47dd69e/status");
   digitalWrite(PIN_LED, LedStatus.toInt());
-String z = String(digitalRead(PIN_LED));
+  String z = String(digitalRead(PIN_LED));
   Serial.println("vvvvvvvvvvvvvv : " + z);
   Firebase.stream("/AAjT5c028d47dd69e");
 }
@@ -82,11 +87,11 @@ void loop() {
   // check timer and current time here if same time then turn led on else off
   if (timer == buffer && !timerflag)
   {
-//    digitalWrite(PIN_LED, HIGH);
+    //    digitalWrite(PIN_LED, HIGH);
     Serial.println("timer is set");
     LedStatus = String(!digitalRead(PIN_LED));
     timerflag = true;
-    //    Firebase.setString("520dd4c0-dddd-11e8-b63e-290de7252586/status" , "1");
+    FirebaseSet.setString("AAjT5c028d47dd69e/status" , LedStatus);
   }
 
   if (LedStatus == "1")
