@@ -1,59 +1,79 @@
-#include <ESP8266WiFi.h>
+#include <EEPROM.h>
 
-//needed for library
-#include <ESP8266WebServer.h>
-#include <DNSServer.h>
-#include <WiFiManager.h>          //https://github.com/kentaylor/WiFiManager
+void writeEEPROM(int strlength , String phrase) {
+  EEPROM.begin(512); //Max bytes of eeprom to use
+  //  yield();
+  Serial.println();
+  //write to eeprom
+  Serial.println("writing eeprom:");
+  int i;
+  for ( i = 0 ; i < strlength ; i++)
+  {
+    EEPROM.write(i , phrase[i]);
+  }
+  EEPROM.write(i , '#');
+  EEPROM.commit();
+  Serial.println();
+  delay(10);
+  Serial.println(char(EEPROM.read(0)));
+  EEPROM.end();
+}
 
-// Set these to run example.
-const int PIN_LED = 5; // D1 on NodeMCU and WeMos. Controls the onboard LED.
-const int TRIGGER_PIN = 0; // D3 on NodeMCU and WeMos.
-const int TRIGGER_PIN2 = 13; // D7 on NodeMCU and WeMos.
-
-#define LED 14
-
+//void readEEPROM(int startAdr, int maxLength, char* dest) {
+//  Serial.println("Reading EEPROM");
+//  EEPROM.begin(512);
+//  delay(10);
+//  for (int i = 0; i < maxLength; i++)
+//  {
+//    *dest += char(EEPROM.read(startAdr + i));
+//    //if(dest[i]='\0') break;//break when end of sting is reached before maxLength
+//  }
+//  EEPROM.end();
+//  //esid.trim();
+//  Serial.print("ready reading:");
+//  Serial.println(dest);
+//}
+char str;
+int j;
+String s;
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
+  delay(100);
+  //
+  //  strcat(wifi_ssid_private, "SSID1234");
+  //  strcat(wifi_password_private, "PW1234");
 
-  pinMode(TRIGGER_PIN, INPUT);
-  pinMode(LED, OUTPUT);
-  pinMode(PIN_LED, OUTPUT);
-  //auto connect
-  WiFiManager wifiManager;
-  digitalWrite(PIN_LED, HIGH);   // turn the LED on (HIGH is the voltage level)
-  wifiManager.autoConnect("AutoConnectAP");
-  Serial.println("connected...yeey :)");
+  writeEEPROM(5 , "aszbff"); //32 byte max length
+  //  writeEEPROM(32, 32, wifi_password_private); //32 byte max length
+  Serial.println("everything saved...");
+  EEPROM.begin(512); //Max bytes of eeprom to use
+  //  for (int j = 0; j < 5; j++)
+  //  {
+  //    Serial.println(char(EEPROM.read(j)));
+  //  }
+  str = ' ';
+  s = "";
+  j = 0;
+  while (str != '0')
+  {
+    str = char(EEPROM.read(j));
+    s += char(EEPROM.read(j));
 
-
-
+    Serial.println(char(EEPROM.read(j)));
+    j++;
+  }
+  Serial.println(s);
+  EEPROM.end();
+  //  readEEPROM(0, 32, wifi_ssid_private);
+  //  readEEPROM(32, 32, wifi_password_private);
 }
 
 void loop() {
-  // code here
-  if ( digitalRead(TRIGGER_PIN) == LOW ) {
-    //WiFiManager
-    WiFiManager wifiManager;
-    digitalWrite(PIN_LED, HIGH);   // turn the LED on (HIGH is the voltage level)
-    digitalWrite(LED, LOW);
-    if (!wifiManager.startConfigPortal("OnDemandAP")) {
-      Serial.println("failed to connect and hit timeout");
-      delay(3000);
-      //reset and try again, or maybe put it to deep sleep
-      ESP.reset();
-      delay(5000);
-    }
-    //if you get here you have connected to the WiFi
-    Serial.println("connected...yeey :)");
-  }
-
-  if (WiFi.status() != WL_CONNECTED) {
-    digitalWrite(LED, LOW);
-    digitalWrite(PIN_LED, LOW);
-
-  } else {
-    digitalWrite(LED, HIGH);
-    digitalWrite(PIN_LED, LOW);
-
-  }
+  // put your main code here, to run repeatedly:
+  //  Serial.println("Loop");
+  //  delay(1000);
+  //  EEPROM.begin(512);
+  //  Serial.println(char(EEPROM.read(0)));
+  //  Serial.println(char(EEPROM.read(32)));
+  //  EEPROM.end();
 }
